@@ -1,0 +1,2525 @@
+#lang racket/gui
+(require (only-in racket/gui/base play-sound))
+(require test-engine/racket-tests)
+(require 2htdp/image)
+(require 2htdp/universe)
+;music
+(define sound_path "./untitled.mp3")
+(define sound_path:/ "./button sounds.wav")
+(define sound_path:3 "./button sounds_2.wav")
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ===========================================================
+; ******************** SIMPLE STRUCTURES ********************
+; ===========================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of game
+;property: Start(Scene): Start scene
+;property: Selection(Scene): Selection scene
+;property: Shapes(Scene): Shapes scene
+;property: Colors(Scene): Colors scene
+;property: Numbers(Scene): Numbers scene
+;property: End(Scene): End scene
+;property: current(string): Current scene of the game
+;property: score(image): Score of player
+
+(define-struct game (Start Selection Shapes Colors Numbers End current score))
+;---------------------------------------------------------------------------------------
+;structure of positions
+;property: x(number): x position
+;property: y(number): y position
+(define-struct pos (x y))
+
+;structure of buttons
+;property: im(image): image of button
+;property: pos(pos): Position of button
+(define-struct button (im pos))
+
+;define text structure
+;property: im(image): image of text
+;property: pos(pos): Position of text
+(define-struct TEXT (im pos))
+
+;define start img
+(define startB (scale .15 (bitmap/file "./startButton.png")))
+
+;define next img
+(define nextB (scale .15 (bitmap/file "./Nextbutton.png")))
+
+;define back img
+(define backB (scale .15 (bitmap/file "./Backbutton.png")))
+
+;define start again img
+(define startagainB (scale .20 (bitmap/file "./start again button.png")))
+
+;define shapes' game img
+(define shapesgameB (scale .20 (bitmap/file "./ShapesGame.png")))
+
+;define numbers' game img
+(define numbersgameB (scale .20 (bitmap/file "./NumberGame.png")))
+
+;define colors' game img
+(define colorsgameB (scale .20 (bitmap/file "./ColorsGame.png")))
+
+;define end img
+(define endB (scale .15 (bitmap/file "./Endbutton.png")))
+
+;define houseBG img
+(define houseBG (scale 1.4 (bitmap/file "./houseBG.jpeg")))
+
+;define selectionBG img
+(define selectionBG (scale 1.4 (bitmap/file "./selectionROOM.jpg")))
+
+;define colorBG img
+(define colorBG (scale 1.4 (bitmap/file "./colorsROOM.jpg")))
+
+;define shapesBG img
+(define shapesBG (scale 1.4 (bitmap/file "./shapesROOM.jpg")))
+
+;define numbersBG img
+(define numbersBG (scale 1.4 (bitmap/file "./numbersROOM.jpg")))
+
+;define startAgainBG img
+(define startAgainBG (scale 1.4 (bitmap/file "./startAGAINROOM.jpg")))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ===========================================================
+; ******************** MULTI-USE BUTTONS ********************
+; ===========================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;next button
+(define NEXT (make-button nextB
+             (make-pos 1650 900)))
+
+;back button
+(define BACK (make-button backB
+             (make-pos 1600 800)))
+
+;end button
+(define END (make-button endB
+            (make-pos 950 800)))
+;start again button
+(define RESTART (make-button startagainB
+                (make-pos 950 840)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ===============================================
+; ******************** START ********************
+; ===============================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of start
+;property: btn1(button): start button
+(define-struct Start (btn1))
+
+
+;purpose: Drawing the start scene
+;contract: drawStart butn1(button)-> image
+;tests:
+(check-expect (drawStart (make-button (circle 50 "solid" "red")
+                         (make-pos 250 250)))(place-image (circle 50 "solid" "red") 250 250 houseBG))
+;function:
+(define (drawStart butn1)(place-image (button-im butn1)
+                                  (pos-x(button-pos butn1))
+                                  (pos-y(button-pos butn1))
+                                  houseBG))
+
+;define Start button
+(define START (make-button startB
+                           (make-pos 950 840)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; =========================================================
+; ******************** SELECTION SCENE ********************
+; =========================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of Selection
+;property: btn2(button): Shapes game button in selection
+;property: btn3(button): Colors game button in selection
+;property: btn4(button): Numbers game button in selection
+;property: byebye(button): End game button in selection
+(define-struct Selection (btn2 btn3 btn4 byebye))
+
+;define button 2
+(define ShapesGame (make-button shapesgameB
+                                (make-pos 450 500)))
+;define button 3
+(define ColorsGame (make-button colorsgameB
+                                (make-pos 950 500)))
+;define button 4
+(define NumbersGame (make-button numbersgameB
+                                (make-pos 1450 500)))
+
+;purpose: draw selection scene
+;contract: drawSelection butn2(button) butn3(button) butn4(button) byeB(button) ws(world state)->image
+;test
+(check-expect                           (drawSelection ShapesGame ColorsGame NumbersGame END (make-game "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+                                              (place-image (button-im ShapesGame)
+                                                     (pos-x(button-pos ShapesGame))
+                                                     (pos-y(button-pos ShapesGame))
+                                        (place-image (button-im END)
+                                                     (pos-x(button-pos END))
+                                                     (pos-y(button-pos END))
+                                        (place-image(text"Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (button-im NumbersGame)
+                                                     (pos-x(button-pos NumbersGame))
+                                                     (pos-y(button-pos NumbersGame))
+                                        (place-image (button-im ColorsGame)
+                                                     (pos-x(button-pos ColorsGame))
+                                                     (pos-y(button-pos ColorsGame))
+                                                     selectionBG))))))
+;function:
+(define (drawSelection butn2 butn3 butn4 byeB ws)
+                                        (place-image (button-im butn2)
+                                                     (pos-x(button-pos butn2))
+                                                     (pos-y(button-pos butn2))
+                                        (place-image (button-im byeB)
+                                                     (pos-x(button-pos byeB))
+                                                     (pos-y(button-pos byeB))
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (button-im butn3)
+                                                     (pos-x(button-pos butn3))
+                                                     (pos-y(button-pos butn3))
+                                        (place-image (button-im butn4)
+                                                     (pos-x(button-pos butn4))
+                                                     (pos-y(button-pos butn4))
+                                                     selectionBG))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ======================================================
+; ******************** SHAPES SCENE ********************
+; ======================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of Shapes
+;property: TEXT(text): dialogue of scene
+;property: shape1(button): first shape of the scene
+;property: shape2(button): second shape of the scene
+;property: shape3(button): third shape of the scene
+;property: shape4(button): fourth shape of the scene
+;property: shape5(button): fifth shape of the scene
+;property:  btn5 (button): next button to start the scene sequence
+(define-struct Shapes (TEXT shape1 shape2 shape3 shape4 shape5 btn5))
+
+;define tutorial text shapes
+(define textsT (make-TEXT (overlay (text "Look at the shapes carefully and memorize their names" 35 "white")(rectangle 865 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text1 shapes
+(define texts1 (make-TEXT (overlay (text "Pick The Rectangle ▬" 35 "white")(rectangle 455 75 "solid" "black"))
+                         (make-pos 950 100)))
+;define text2 shapes
+(define texts2 (make-TEXT (overlay (text "Pick The Triangle ▲" 35 "white")(rectangle 455 75 "solid" "black"))
+                         (make-pos 950 100)))
+;define text3 shapes
+(define texts3 (make-TEXT (overlay (text "Pick The Circle ●" 35 "white")(rectangle 455 75 "solid" "black"))
+                         (make-pos 950 100)))
+;define text4 shapes
+(define texts4 (make-TEXT (overlay (text "Pick The Star ★" 35 "white")(rectangle 455 75 "solid" "black"))
+                         (make-pos 950 100)))
+;define text5 shapes
+(define texts5 (make-TEXT (overlay (text "Pick The Square ■" 35 "white")(rectangle 455 75 "solid" "black"))
+                         (make-pos 950 100)))
+
+;define tutorial shape 1
+(define Tshakl1 (make-button (above (overlay (rectangle 150 90 "solid" "Blanched Almond")(rectangle 155 95 "solid" "black"))(text "Rectangle" 50 "black"))
+                            (make-pos 550 350)))
+;define tutorial shape 2
+(define Tshakl2 (make-button (above (overlay (triangle 150 "solid" "Blanched Almond")(triangle 155 "solid" "black"))(text "Triangle" 50 "black"))
+                            (make-pos 550 750)))
+;define tutorial shape 3
+(define Tshakl3 (make-button (above (overlay (circle 100 "solid" "Blanched Almond")(circle 102 "solid" "black"))(text "Circle" 50 "black"))
+                            (make-pos 950 550)))
+;define tutorial shape 4
+(define Tshakl4 (make-button (above (overlay (star 150 "solid" "Blanched Almond")(star 155 "solid" "black"))(text "Star" 50 "black"))
+                            (make-pos 1350 350)))
+;define tutorial shape 5
+(define Tshakl5 (make-button (above (overlay (square 145 "solid" "Blanched Almond")(square 150 "solid" "black"))(text "Square" 50 "black"))
+                            (make-pos 1350 750)))
+
+
+;define shape 1
+(define shakl1 (make-button (overlay (rectangle 150 90 "solid" "Blanched Almond")(rectangle 155 95 "solid" "black"))
+                            (make-pos 550 350)))
+;define shape 2
+(define shakl2 (make-button (overlay (triangle 150 "solid" "Blanched Almond")(triangle 155 "solid" "black"))
+                            (make-pos 1350 750)))
+;define shape 3
+(define shakl3 (make-button (overlay (circle 100 "solid" "Blanched Almond")(circle 102 "solid" "black"))
+                            (make-pos 1350 350)))
+;define shape 4
+(define shakl4 (make-button (overlay (star 150 "solid" "Blanched Almond")(star 155 "solid" "black"))
+                            (make-pos 950 550)))
+;define shape 5
+(define shakl5 (make-button (overlay (square 145 "solid" "Blanched Almond")(square 150 "solid" "black"))
+                            (make-pos 550 750)))
+
+;purpose: drawing the shapes tutorial
+;contract: drawShapeT t(text) shap1(button) shap2(button) shap3(button) shap4(button) shap5(button) butn5(button) ws(world state)-> image
+;tests:
+(check-expect (drawShapeT textsT shakl1 shakl2 shakl3 shakl4 shakl5 NEXT (make-game                     "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textsT)
+                                                     (pos-x(TEXT-pos textsT))
+                                                     (pos-y(TEXT-pos textsT))
+                                        (place-image (button-im shakl1)
+                                                     (pos-x(button-pos shakl1))
+                                                     (pos-y(button-pos shakl1))
+                                        (place-image (button-im shakl2)
+                                                     (pos-x(button-pos shakl2))
+                                                     (pos-y(button-pos shakl2))
+                                        (place-image (button-im shakl3)
+                                                     (pos-x(button-pos shakl3))
+                                                     (pos-y(button-pos shakl3))
+                                        (place-image (button-im shakl4)
+                                                     (pos-x(button-pos shakl4))
+                                                     (pos-y(button-pos shakl4))
+                                        (place-image (button-im shakl5)
+                                                     (pos-x(button-pos shakl5))
+                                                     (pos-y(button-pos shakl5))
+                                        (place-image (button-im NEXT)
+                                                     (pos-x(button-pos NEXT))
+                                                     (pos-y(button-pos NEXT))
+                                                     shapesBG)))))))))
+              
+;function:
+(define (drawShapeT t shap1 shap2 shap3 shap4 shap5 butn5 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im t)
+                                                     (pos-x(TEXT-pos t))
+                                                     (pos-y(TEXT-pos t))
+                                        (place-image (button-im shap1)
+                                                     (pos-x(button-pos shap1))
+                                                     (pos-y(button-pos shap1))
+                                        (place-image (button-im shap2)
+                                                     (pos-x(button-pos shap2))
+                                                     (pos-y(button-pos shap2))
+                                        (place-image (button-im shap3)
+                                                     (pos-x(button-pos shap3))
+                                                     (pos-y(button-pos shap3))
+                                        (place-image (button-im shap4)
+                                                     (pos-x(button-pos shap4))
+                                                     (pos-y(button-pos shap4))
+                                        (place-image (button-im shap5)
+                                                     (pos-x(button-pos shap5))
+                                                     (pos-y(button-pos shap5))
+                                        (place-image (button-im butn5)
+                                                     (pos-x(button-pos butn5))
+                                                     (pos-y(button-pos butn5))
+                                                     shapesBG)))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the shapes scene 1
+;contract: drawShape1 t(text) shap1(button) shap2(button) shap3(button) shap4(button) shap5(button) ws(world state)-> image
+;tests:
+(check-expect (drawShape1 texts1 shakl1 shakl2 shakl3 shakl4 shakl5 (make-game                          "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im texts1)
+                                                     (pos-x(TEXT-pos texts1))
+                                                     (pos-y(TEXT-pos texts1))
+                                        (place-image (button-im shakl1)
+                                                     (pos-x(button-pos shakl1))
+                                                     (pos-y(button-pos shakl1))
+                                        (place-image (button-im shakl2)
+                                                     (pos-x(button-pos shakl2))
+                                                     (pos-y(button-pos shakl2))
+                                        (place-image (button-im shakl3)
+                                                     (pos-x(button-pos shakl3))
+                                                     (pos-y(button-pos shakl3))
+                                        (place-image (button-im shakl4)
+                                                     (pos-x(button-pos shakl4))
+                                                     (pos-y(button-pos shakl4))
+                                        (place-image (button-im shakl5)
+                                                     (pos-x(button-pos shakl5))
+                                                     (pos-y(button-pos shakl5))
+                                                     shapesBG))))))))
+;drawing the shapes 1
+(define (drawShape1 t shap1 shap2 shap3 shap4 shap5 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im t)
+                                                     (pos-x(TEXT-pos t))
+                                                     (pos-y(TEXT-pos t))
+                                        (place-image (button-im shap1)
+                                                     (pos-x(button-pos shap1))
+                                                     (pos-y(button-pos shap1))
+                                        (place-image (button-im shap2)
+                                                     (pos-x(button-pos shap2))
+                                                     (pos-y(button-pos shap2))
+                                        (place-image (button-im shap3)
+                                                     (pos-x(button-pos shap3))
+                                                     (pos-y(button-pos shap3))
+                                        (place-image (button-im shap4)
+                                                     (pos-x(button-pos shap4))
+                                                     (pos-y(button-pos shap4))
+                                        (place-image (button-im shap5)
+                                                     (pos-x(button-pos shap5))
+                                                     (pos-y(button-pos shap5))
+                                                     shapesBG))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the shapes scene 2
+;contract: drawShape2 t(text) shap1(button) shap2(button) shap3(button) shap4(button) shap5(button) ws(world state)-> image
+;tests:
+(check-expect (drawShape1 texts2 shakl1 shakl2 shakl3 shakl4 shakl5 (make-game                          "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im texts2)
+                                                     (pos-x(TEXT-pos texts2))
+                                                     (pos-y(TEXT-pos texts2))
+                                        (place-image (button-im shakl1)
+                                                     (pos-x(button-pos shakl1))
+                                                     (pos-y(button-pos shakl1))
+                                        (place-image (button-im shakl2)
+                                                     (pos-x(button-pos shakl2))
+                                                     (pos-y(button-pos shakl2))
+                                        (place-image (button-im shakl3)
+                                                     (pos-x(button-pos shakl3))
+                                                     (pos-y(button-pos shakl3))
+                                        (place-image (button-im shakl4)
+                                                     (pos-x(button-pos shakl4))
+                                                     (pos-y(button-pos shakl4))
+                                        (place-image (button-im shakl5)
+                                                     (pos-x(button-pos shakl5))
+                                                     (pos-y(button-pos shakl5))
+                                                     shapesBG))))))))
+;functions:
+(define (drawShape2 t shap1 shap2 shap3 shap4 shap5 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im t)
+                                                     (pos-x(TEXT-pos t))
+                                                     (pos-y(TEXT-pos t))
+                                        (place-image (button-im shap1)
+                                                     (pos-x(button-pos shap1))
+                                                     (pos-y(button-pos shap1))
+                                        (place-image (button-im shap2)
+                                                     (pos-x(button-pos shap2))
+                                                     (pos-y(button-pos shap2))
+                                        (place-image (button-im shap3)
+                                                     (pos-x(button-pos shap3))
+                                                     (pos-y(button-pos shap3))
+                                        (place-image (button-im shap4)
+                                                     (pos-x(button-pos shap4))
+                                                     (pos-y(button-pos shap4))
+                                        (place-image (button-im shap5)
+                                                     (pos-x(button-pos shap5))
+                                                     (pos-y(button-pos shap5)) 
+                                                     shapesBG))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the shapes scene 3
+;contract: drawShape3 t(text) shap1(button) shap2(button) shap3(button) shap4(button) shap5(button) ws(world state)-> image
+;tests:
+(check-expect (drawShape3 texts3 shakl1 shakl2 shakl3 shakl4 shakl5 (make-game                          "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im texts3)
+                                                     (pos-x(TEXT-pos texts3))
+                                                     (pos-y(TEXT-pos texts3))
+                                        (place-image (button-im shakl1)
+                                                     (pos-x(button-pos shakl1))
+                                                     (pos-y(button-pos shakl1))
+                                        (place-image (button-im shakl2)
+                                                     (pos-x(button-pos shakl2))
+                                                     (pos-y(button-pos shakl2))
+                                        (place-image (button-im shakl3)
+                                                     (pos-x(button-pos shakl3))
+                                                     (pos-y(button-pos shakl3))
+                                        (place-image (button-im shakl4)
+                                                     (pos-x(button-pos shakl4))
+                                                     (pos-y(button-pos shakl4))
+                                        (place-image (button-im shakl5)
+                                                     (pos-x(button-pos shakl5))
+                                                     (pos-y(button-pos shakl5))
+                                                     shapesBG))))))))
+;functions:
+(define (drawShape3 t shap1 shap2 shap3 shap4 shap5 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im t)
+                                                     (pos-x(TEXT-pos t))
+                                                     (pos-y(TEXT-pos t))
+                                        (place-image (button-im shap1)
+                                                     (pos-x(button-pos shap1))
+                                                     (pos-y(button-pos shap1))
+                                        (place-image (button-im shap2)
+                                                     (pos-x(button-pos shap2))
+                                                     (pos-y(button-pos shap2))
+                                        (place-image (button-im shap3)
+                                                     (pos-x(button-pos shap3))
+                                                     (pos-y(button-pos shap3))
+                                        (place-image (button-im shap4)
+                                                     (pos-x(button-pos shap4))
+                                                     (pos-y(button-pos shap4))
+                                        (place-image (button-im shap5)
+                                                     (pos-x(button-pos shap5))
+                                                     (pos-y(button-pos shap5))
+                                                     shapesBG))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the shapes scene 4
+;contract: drawShape4 t(text) shap1(button) shap2(button) shap3(button) shap4(button) shap5(button) ws(world state)-> image
+;tests:
+(check-expect (drawShape4 texts4 shakl1 shakl2 shakl3 shakl4 shakl5 (make-game                          "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im texts4)
+                                                     (pos-x(TEXT-pos texts4))
+                                                     (pos-y(TEXT-pos texts4))
+                                        (place-image (button-im shakl1)
+                                                     (pos-x(button-pos shakl1))
+                                                     (pos-y(button-pos shakl1))
+                                        (place-image (button-im shakl2)
+                                                     (pos-x(button-pos shakl2))
+                                                     (pos-y(button-pos shakl2))
+                                        (place-image (button-im shakl3)
+                                                     (pos-x(button-pos shakl3))
+                                                     (pos-y(button-pos shakl3))
+                                        (place-image (button-im shakl4)
+                                                     (pos-x(button-pos shakl4))
+                                                     (pos-y(button-pos shakl4))
+                                        (place-image (button-im shakl5)
+                                                     (pos-x(button-pos shakl5))
+                                                     (pos-y(button-pos shakl5))
+                                                     shapesBG))))))))
+;functions:
+(define (drawShape4 t shap1 shap2 shap3 shap4 shap5 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im t)
+                                                     (pos-x(TEXT-pos t))
+                                                     (pos-y(TEXT-pos t))
+                                        (place-image (button-im shap1)
+                                                     (pos-x(button-pos shap1))
+                                                     (pos-y(button-pos shap1))
+                                        (place-image (button-im shap2)
+                                                     (pos-x(button-pos shap2))
+                                                     (pos-y(button-pos shap2))
+                                        (place-image (button-im shap3)
+                                                     (pos-x(button-pos shap3))
+                                                     (pos-y(button-pos shap3))
+                                        (place-image (button-im shap4)
+                                                     (pos-x(button-pos shap4))
+                                                     (pos-y(button-pos shap4))
+                                        (place-image (button-im shap5)
+                                                     (pos-x(button-pos shap5))
+                                                     (pos-y(button-pos shap5))
+                                                     shapesBG))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the shapes scene 5
+;contract: drawShape5 t(text) shap1(button) shap2(button) shap3(button) shap4(button) shap5(button) ws(world state)-> image
+;tests:
+(check-expect (drawShape5 texts5 shakl1 shakl2 shakl3 shakl4 shakl5 (make-game                          "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im texts5)
+                                                     (pos-x(TEXT-pos texts5))
+                                                     (pos-y(TEXT-pos texts5))
+                                        (place-image (button-im shakl1)
+                                                     (pos-x(button-pos shakl1))
+                                                     (pos-y(button-pos shakl1))
+                                        (place-image (button-im shakl2)
+                                                     (pos-x(button-pos shakl2))
+                                                     (pos-y(button-pos shakl2))
+                                        (place-image (button-im shakl3)
+                                                     (pos-x(button-pos shakl3))
+                                                     (pos-y(button-pos shakl3))
+                                        (place-image (button-im shakl4)
+                                                     (pos-x(button-pos shakl4))
+                                                     (pos-y(button-pos shakl4))
+                                        (place-image (button-im shakl5)
+                                                     (pos-x(button-pos shakl5))
+                                                     (pos-y(button-pos shakl5))
+                                                     shapesBG))))))))
+;functions:
+(define (drawShape5 t shap1 shap2 shap3 shap4 shap5 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im t)
+                                                     (pos-x(TEXT-pos t))
+                                                     (pos-y(TEXT-pos t))
+                                        (place-image (button-im shap1)
+                                                     (pos-x(button-pos shap1))
+                                                     (pos-y(button-pos shap1))
+                                        (place-image (button-im shap2)
+                                                     (pos-x(button-pos shap2))
+                                                     (pos-y(button-pos shap2))
+                                        (place-image (button-im shap3)
+                                                     (pos-x(button-pos shap3))
+                                                     (pos-y(button-pos shap3))
+                                        (place-image (button-im shap4)
+                                                     (pos-x(button-pos shap4))
+                                                     (pos-y(button-pos shap4))
+                                        (place-image (button-im shap5)
+                                                     (pos-x(button-pos shap5))
+                                                     (pos-y(button-pos shap5))
+                                                     shapesBG))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ================================================
+
+; ******************** COLORS ********************
+
+; ================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of Colors
+(define-struct Colors (TEXT color1 color2 color3 color4 color5 color6 btn6))
+;define tutorial text color
+(define textcT (make-TEXT (overlay (text "Look at the colors carefully and memorize their names" 35 "white")(rectangle 860 70 "solid" "black")(rectangle 865 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text1 color
+(define textc1 (make-TEXT (overlay (beside (text "Pick " 35 "white")(text "Red" 35 "Dark Red"))(rectangle 360 70 "solid" "black"))
+                          (make-pos 950 100)))
+;define text2 color
+(define textc2 (make-TEXT (overlay (beside (text "Pick " 35 "white")(text "Yellow" 35 "yellow"))(rectangle 360 70 "solid" "black"))
+                          (make-pos 950 100)))
+;define text3 color
+(define textc3 (make-TEXT (overlay (beside (text "Pick " 35 "white")(text "Blue" 35 "Light Sky Blue"))(rectangle 360 70 "solid" "black"))
+                          (make-pos 950 100)))
+;define text4 color
+(define textc4 (make-TEXT (overlay (beside (text "Pick " 35 "white")(text "Green" 35 "Medium Sea Green"))(rectangle 360 70 "solid" "black"))
+                          (make-pos 950 100)))
+;define text5 color
+(define textc5 (make-TEXT (overlay (beside (text "Pick " 35 "white")(text "Purple" 35 "Medium Slate Blue"))(rectangle 360 70 "solid" "black"))
+                          (make-pos 950 100)))
+;define text6 color
+(define textc6 (make-TEXT (overlay (beside (text "Pick " 35 "white")(text "Orange" 35 "orange"))(rectangle 360 70 "solid" "black"))
+                          (make-pos 950 100)))
+
+;define tutorial color 1
+(define Tloon1 (make-button (above (overlay (square 150 "solid" "Dark Red") (square 160 "solid" "black"))(text "Red" 50 "black")) 
+                           (make-pos 550 350)))
+;define tutorial color 2
+(define Tloon2 (make-button (above (overlay (square 150 "solid" "yellow") (square 160 "solid" "black"))(text "Yellow" 50 "black"))
+                           (make-pos 550 750)))
+;define tutorial color 3
+(define Tloon3 (make-button (above (overlay (square 150 "solid" "Light Sky Blue") (square 160 "solid" "black"))(text "Blue" 50 "black"))
+                           (make-pos 950 350)))
+;define tutorial color 4
+(define Tloon4 (make-button (above (overlay (square 150 "solid" "Medium Sea Green") (square 160 "solid" "black"))(text "Green" 50 "black"))
+                           (make-pos 1350 350)))
+;define tutorial color 5
+(define Tloon5 (make-button (above (overlay (square 150 "solid" "Medium Slate Blue") (square 160 "solid" "black"))(text "Purple" 50 "black"))
+                           (make-pos 1350 750)))
+;define tutorial color 6
+(define Tloon6 (make-button (above (overlay (square 150 "solid" "orange") (square 160 "solid" "black"))(text "Orange" 50 "black"))
+                           (make-pos 950 750)))
+
+ 
+;define color 1
+(define loon1 (make-button (overlay (square 150 "solid" "Dark Red") (square 160 "solid" "black"))
+                           (make-pos 1500 750)))
+;define color 2
+(define loon2 (make-button (overlay (square 150 "solid" "yellow") (square 160 "solid" "black"))
+                           (make-pos 950 750)))
+;define color 3
+(define loon3 (make-button (overlay (square 150 "solid" "Light Sky Blue") (square 160 "solid" "black"))
+                           (make-pos 1500 350)))
+;define color 4
+(define loon4 (make-button (overlay (square 150 "solid" "Medium Sea Green") (square 160 "solid" "black"))
+                           (make-pos 350 350)))
+;define color 5
+(define loon5 (make-button (overlay (square 150 "solid" "Medium Slate Blue") (square 160 "solid" "black"))
+                           (make-pos 950 350)))
+;define color 6
+(define loon6 (make-button (overlay (square 150 "solid" "orange") (square 160 "solid" "black"))
+                           (make-pos 350 750)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors tutorial scene
+;contract: drawColorsT s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) butn6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColorsT textcT loon1 loon2 loon3 loon4 loon5 loon6 NEXT (make-game                   "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textcT)
+                                                     (pos-x(TEXT-pos textcT))
+                                                     (pos-y(TEXT-pos textcT))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                        (place-image (button-im NEXT)
+                                                     (pos-x(button-pos NEXT))
+                                                     (pos-y(button-pos NEXT))
+                                                     colorBG))))))))))
+;functions:
+(define (drawColorsT s colo1 colo2 colo3 colo4 colo5 colo6 butn6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                        (place-image (button-im butn6)
+                                                     (pos-x(button-pos butn6))
+                                                     (pos-y(button-pos butn6))
+                                                     colorBG))))))))))
+
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors scene 1
+;contract: drawColorsT s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColors1 textc1 loon1 loon2 loon3 loon4 loon5 loon6 (make-game                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textc1)
+                                                     (pos-x(TEXT-pos textc1))
+                                                     (pos-y(TEXT-pos textc1))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                                     colorBG)))))))))
+;functions:
+(define (drawColors1 s colo1 colo2 colo3 colo4 colo5 colo6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                                     colorBG)))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors scene 2
+;contract: drawColors2 s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColors2 textc2 loon1 loon2 loon3 loon4 loon5 loon6 (make-game                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textc2)
+                                                     (pos-x(TEXT-pos textc2))
+                                                     (pos-y(TEXT-pos textc2))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                                     colorBG)))))))))
+;functions:
+(define (drawColors2 s colo1 colo2 colo3 colo4 colo5 colo6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                                     colorBG)))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors scene 3
+;contract: drawColors3 s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColors3 textc3 loon1 loon2 loon3 loon4 loon5 loon6 (make-game                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textc3)
+                                                     (pos-x(TEXT-pos textc3))
+                                                     (pos-y(TEXT-pos textc3))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                                     colorBG)))))))))
+;functions:
+(define (drawColors3 s colo1 colo2 colo3 colo4 colo5 colo6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                                     colorBG)))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors scene 4
+;contract: drawColors4 s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColors4 textc4 loon1 loon2 loon3 loon4 loon5 loon6 (make-game                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textc4)
+                                                     (pos-x(TEXT-pos textc4))
+                                                     (pos-y(TEXT-pos textc4))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                                     colorBG)))))))))
+;functions:
+(define (drawColors4 s colo1 colo2 colo3 colo4 colo5 colo6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                                     colorBG)))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors scene 5
+;contract: drawColors5 s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColors5 textc5 loon1 loon2 loon3 loon4 loon5 loon6 (make-game                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textc5)
+                                                     (pos-x(TEXT-pos textc5))
+                                                     (pos-y(TEXT-pos textc5))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                                     colorBG)))))))))
+;functions:
+(define (drawColors5 s colo1 colo2 colo3 colo4 colo5 colo6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                                     colorBG)))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: drawing the colors scene 6
+;contract: drawColors6 s(text) colo1(button) colo2(button) colo3(button) colo4(button) colo5(button) colo6(button) ws(world state)->image 
+;tests:
+(check-expect (drawColors6 textc6 loon1 loon2 loon3 loon4 loon5 loon6 (make-game                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image                           (text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textc6)
+                                                     (pos-x(TEXT-pos textc6))
+                                                     (pos-y(TEXT-pos textc6))
+                                        (place-image (button-im loon1)
+                                                     (pos-x(button-pos loon1))
+                                                     (pos-y(button-pos loon1))
+                                        (place-image (button-im loon2)
+                                                     (pos-x(button-pos loon2))
+                                                     (pos-y(button-pos loon2))
+                                        (place-image (button-im loon3)
+                                                     (pos-x(button-pos loon3))
+                                                     (pos-y(button-pos loon3))
+                                        (place-image (button-im loon4)
+                                                     (pos-x(button-pos loon4))
+                                                     (pos-y(button-pos loon4))
+                                        (place-image (button-im loon5)
+                                                     (pos-x(button-pos loon5))
+                                                     (pos-y(button-pos loon5))
+                                        (place-image (button-im loon6)
+                                                     (pos-x(button-pos loon6))
+                                                     (pos-y(button-pos loon6))
+                                                     colorBG)))))))))
+;functions:
+(define (drawColors6 s colo1 colo2 colo3 colo4 colo5 colo6 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im s)
+                                                     (pos-x(TEXT-pos s))
+                                                     (pos-y(TEXT-pos s))
+                                        (place-image (button-im colo1)
+                                                     (pos-x(button-pos colo1))
+                                                     (pos-y(button-pos colo1))
+                                        (place-image (button-im colo2)
+                                                     (pos-x(button-pos colo2))
+                                                     (pos-y(button-pos colo2))
+                                        (place-image (button-im colo3)
+                                                     (pos-x(button-pos colo3))
+                                                     (pos-y(button-pos colo3))
+                                        (place-image (button-im colo4)
+                                                     (pos-x(button-pos colo4))
+                                                     (pos-y(button-pos colo4))
+                                        (place-image (button-im colo5)
+                                                     (pos-x(button-pos colo5))
+                                                     (pos-y(button-pos colo5))
+                                        (place-image (button-im colo6)
+                                                     (pos-x(button-pos colo6))
+                                                     (pos-y(button-pos colo6))            
+                                                     colorBG)))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ======================================================
+; ******************** NUMBER SCENE ********************
+; ======================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of Numbers
+(define-struct Numbers (TEXT NS0 NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 btn7))
+;define tutorial text numbers
+(define textnT (make-TEXT (overlay (text "Look at the numbers carefully and memorize their names" 35 "white")(rectangle 900 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text1 numbers
+(define textn1 (make-TEXT (overlay (text "Pick Zero" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text2 numbers
+(define textn2 (make-TEXT (overlay (text "Pick One" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text3 numbers
+(define textn3 (make-TEXT (overlay (text "Pick Two" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text4 numbers
+(define textn4 (make-TEXT (overlay (text "Pick Three" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text5 numbers
+(define textn5 (make-TEXT (overlay (text "Pick Four" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text6 numbers
+(define textn6 (make-TEXT (overlay (text "Pick Five" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text7 numbers
+(define textn7 (make-TEXT (overlay (text "Pick Six" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text8 numbers
+(define textn8 (make-TEXT (overlay (text "Pick Seven" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text9 numbers
+(define textn9 (make-TEXT (overlay (text "Pick Eight" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+;define text10 numbers
+(define textn10 (make-TEXT (overlay (text "Pick Nine" 35 "white")(rectangle 265 75 "solid" "black"))
+                          (make-pos 950 100)))
+
+;define tutorial no. 1
+(define Trakam1 (make-button (above (overlay (text "0" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Zero" 50 "black")) 
+                                  (make-pos 950 900)))
+;define tutorial no. 2
+(define Trakam2 (make-button (above (overlay (text "1" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "One" 50 "black"))
+                                   (make-pos 750 300)))
+;define tutorial no. 3
+(define Trakam3 (make-button (above (overlay (text "2" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Two" 50 "black"))
+                                   (make-pos 750 500)))
+;define tutorial no. 4
+(define Trakam4 (make-button (above (overlay (text "3" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Three" 50 "black"))
+                                   (make-pos 750 700)))
+;define tutorial no. 5
+(define Trakam5 (make-button (above (overlay (text "4" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Four" 50 "black"))
+                                   (make-pos 950 300)))
+;define tutorial no. 6
+(define Trakam6 (make-button (above (overlay (text "5" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Five" 50 "black"))
+                                   (make-pos 950 500)))
+;define tutorial no. 7
+(define Trakam7 (make-button (above (overlay (text "6" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Six" 50 "black"))
+                                   (make-pos 950 700)))
+;define tutorial no. 8
+(define Trakam8 (make-button (above (overlay (text "7" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Seven" 50 "black"))
+                                   (make-pos 1150 300)))
+;define tutorial no. 9
+(define Trakam9 (make-button (above (overlay (text "8" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Eight" 50 "black"))
+                                   (make-pos 1150 500)))
+;define tutorial no. 10
+(define Trakam10 (make-button (above (overlay (text "9" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))(text "Nine" 50 "black"))
+                                   (make-pos 1150 700)))
+
+
+;define no. 1
+(define rakam1 (make-button (overlay (text "0" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                  (make-pos 750 650)))
+;define no. 2
+(define rakam2 (make-button (overlay (text "1" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 550 650)))
+;define no. 3
+(define rakam3 (make-button (overlay (text "2" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 950 650)))
+;define no. 4
+(define rakam4 (make-button (overlay (text "3" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 1350 650)))
+;define no. 5
+(define rakam5 (make-button (overlay (text "4" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 1150 450)))
+;define no. 6
+(define rakam6 (make-button (overlay (text "5" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 550 450)))
+;define no. 7
+(define rakam7 (make-button (overlay (text "6" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 1350 450)))
+;define no. 8
+(define rakam8 (make-button (overlay (text "7" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 950 450)))
+;define no. 9
+(define rakam9 (make-button (overlay (text "8" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 1150 650)))
+;define no. 10
+(define rakam10 (make-button (overlay (text "9" 50 "black")(square 125 "solid" "Blanched Almond")(square 130 "solid" "black"))
+                                   (make-pos 750 450)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers tutorial scene
+;contract: drawNumbT z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) butn7(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumbT textnT rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 NEXT (make-game                   "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textnT)
+                                                     (pos-x(TEXT-pos textnT))
+                                                     (pos-y(TEXT-pos textnT))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                        (place-image (button-im NEXT)
+                                                     (pos-x(button-pos NEXT))
+                                                     (pos-y(button-pos NEXT))
+                                                     numbersBG))))))))))))))
+;functions:
+(define (drawNumbT z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 butn7 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                        (place-image (button-im butn7)
+                                                     (pos-x(button-pos butn7))
+                                                     (pos-y(button-pos butn7))
+                                                     numbersBG))))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 1 scene
+;contract: drawNumbT z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb1 textn1 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 (make-game                        "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn1)
+                                                     (pos-x(TEXT-pos textn1))
+                                                     (pos-y(TEXT-pos textn1))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+(define (drawNumb1 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 2 scene
+;contract: drawNumb2 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb2 textn2 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn2)
+                                                     (pos-x(TEXT-pos textn2))
+                                                     (pos-y(TEXT-pos textn2))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb2 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 3 scene
+;contract: drawNumb3 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb3 textn3 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn3)
+                                                     (pos-x(TEXT-pos textn3))
+                                                     (pos-y(TEXT-pos textn3))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb3 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 4 scene
+;contract: drawNumb4 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb4 textn4 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn4)
+                                                     (pos-x(TEXT-pos textn4))
+                                                     (pos-y(TEXT-pos textn4))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb4 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 5 scene
+;contract: drawNumb5 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb5 textn5 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn5)
+                                                     (pos-x(TEXT-pos textn5))
+                                                     (pos-y(TEXT-pos textn5))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb5 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 6 scene
+;contract: drawNumb6 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb6 textn6 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn6)
+                                                     (pos-x(TEXT-pos textn6))
+                                                     (pos-y(TEXT-pos textn6))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb6 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 7 scene
+;contract: drawNumb7 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb7 textn7 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn7)
+                                                     (pos-x(TEXT-pos textn7))
+                                                     (pos-y(TEXT-pos textn7))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb7 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 8 scene
+;contract: drawNumb8 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb8 textn8 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn8)
+                                                     (pos-x(TEXT-pos textn8))
+                                                     (pos-y(TEXT-pos textn8))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb8 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 9 scene
+;contract: drawNumb9 z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) butn7(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb9 textn9 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10  (make-game                       "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn9)
+                                                     (pos-x(TEXT-pos textn9))
+                                                     (pos-y(TEXT-pos textn9))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb9 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: draw numbers 10 scene
+;contract: drawNumbT z(text) n1(button) n2(button) n3(button) n4(button) n5(button) n6(button) n7(button) n8(button) n9(button) n10(button) butn7(button) ws(world state)->image 
+;tests:
+(check-expect (drawNumb10 textn10 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 (make-game                      "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr"
+                                                                                                                                         "rawr" 0))
+                                        (place-image(text "Score: 0" 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im textn10)
+                                                     (pos-x(TEXT-pos textn10))
+                                                     (pos-y(TEXT-pos textn10))
+                                        (place-image (button-im rakam1)
+                                                     (pos-x(button-pos rakam1))
+                                                     (pos-y(button-pos rakam1))
+                                        (place-image (button-im rakam2)
+                                                     (pos-x(button-pos rakam2))
+                                                     (pos-y(button-pos rakam2))
+                                        (place-image (button-im rakam3)
+                                                     (pos-x(button-pos rakam3))
+                                                     (pos-y(button-pos rakam3))
+                                        (place-image (button-im rakam4)
+                                                     (pos-x(button-pos rakam4))
+                                                     (pos-y(button-pos rakam4))
+                                        (place-image (button-im rakam5)
+                                                     (pos-x(button-pos rakam5))
+                                                     (pos-y(button-pos rakam5))
+                                        (place-image (button-im rakam6)
+                                                     (pos-x(button-pos rakam6))
+                                                     (pos-y(button-pos rakam6))            
+                                        (place-image (button-im rakam7)
+                                                     (pos-x(button-pos rakam7))
+                                                     (pos-y(button-pos rakam7))
+                                        (place-image (button-im rakam8)
+                                                     (pos-x(button-pos rakam8))
+                                                     (pos-y(button-pos rakam8))
+                                        (place-image (button-im rakam9)
+                                                     (pos-x(button-pos rakam9))
+                                                     (pos-y(button-pos rakam9))
+                                        (place-image (button-im rakam10)
+                                                     (pos-x(button-pos rakam10))
+                                                     (pos-y(button-pos rakam10))
+                                                     numbersBG)))))))))))))
+;function:
+(define (drawNumb10 z n1 n2 n3 n4 n5 n6 n7 n8 n9 n10 ws)
+                                        (place-image(text(string-append "Score: " (number->string (game-score ws))) 20 "black")
+                                            1800 25
+                                        (place-image (TEXT-im z)
+                                                     (pos-x(TEXT-pos z))
+                                                     (pos-y(TEXT-pos z))
+                                        (place-image (button-im n1)
+                                                     (pos-x(button-pos n1))
+                                                     (pos-y(button-pos n1))
+                                        (place-image (button-im n2)
+                                                     (pos-x(button-pos n2))
+                                                     (pos-y(button-pos n2))
+                                        (place-image (button-im n3)
+                                                     (pos-x(button-pos n3))
+                                                     (pos-y(button-pos n3))
+                                        (place-image (button-im n4)
+                                                     (pos-x(button-pos n4))
+                                                     (pos-y(button-pos n4))
+                                        (place-image (button-im n5)
+                                                     (pos-x(button-pos n5))
+                                                     (pos-y(button-pos n5))
+                                        (place-image (button-im n6)
+                                                     (pos-x(button-pos n6))
+                                                     (pos-y(button-pos n6))            
+                                        (place-image (button-im n7)
+                                                     (pos-x(button-pos n7))
+                                                     (pos-y(button-pos n7))
+                                        (place-image (button-im n8)
+                                                     (pos-x(button-pos n8))
+                                                     (pos-y(button-pos n8))
+                                        (place-image (button-im n9)
+                                                     (pos-x(button-pos n9))
+                                                     (pos-y(button-pos n9))
+                                        (place-image (button-im n10)
+                                                     (pos-x(button-pos n10))
+                                                     (pos-y(button-pos n10))
+                                                     numbersBG)))))))))))))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;purpose: score scene transition
+;contract: drawScoreScene tracer(button) ws(world state)-> image
+;tests:
+(check-expect (drawScoreScene BACK (make-game "start" "selection" "shapes" "colors" "numbers" "end" "current scene" 0)) (place-image (overlay (text "Score: 0" 50 "white")(rectangle 280 80 "solid" "black"))
+                                            935 600
+                                        (place-image (button-im BACK)
+                                                     (pos-x(button-pos BACK))
+                                                     (pos-y(button-pos BACK))
+                                                     startAgainBG)))
+;function:
+(define (drawScoreScene tracer ws)(place-image (overlay (text(string-append "Score: " (number->string (game-score ws))) 50 "white")(rectangle 280 80 "solid" "black"))
+                                            935 600
+                                        (place-image (button-im tracer)
+                                                     (pos-x(button-pos tracer))
+                                                     (pos-y(button-pos tracer))
+                                                     startAgainBG)))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ===================================================
+; ******************** END SCENE ********************
+; ===================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;structure of End
+;property: btn8(button):
+(define-struct End (btn8))
+
+
+
+;purpose: drawing end scene
+;contract: drawEnd butn8(button) ws(world state)-> image
+;tests:
+(check-expect (drawEnd END (make-game                                                                   "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr"
+                                                                                                        "rawr" 0))
+(place-image             (overlay (text "Score: 0" 50 "white")(rectangle 280 80 "solid" "black"))
+                                       935 600
+                         (place-image (button-im END)
+                                      (pos-x(button-pos END))
+                                      (pos-y(button-pos END))
+                                      startAgainBG)))
+              
+;function:
+(define (drawEnd butn8 ws)(place-image(overlay (text(string-append "Score: " (number->string (game-score ws))) 50 "white")(rectangle 280 80 "solid" "black"))
+                                            935 600
+                          (place-image (button-im butn8)
+                                      (pos-x(button-pos butn8))
+                                      (pos-y(button-pos butn8))
+                                      startAgainBG)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+; ========================================================
+; ******************** GAME FUNCTIONS ********************
+; ========================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;mouse functions
+
+;purpose: mouse status checker
+;contract: isItInYet? p(button) x(pos) y(pos) k(mouse event)->boolean
+;tests:
+(check-expect (isItInYet? NEXT (pos-x (button-pos NEXT)) (pos-y (button-pos NEXT)) "button-down") #true)
+;function:
+(define (isItInYet? p x y k)(and (mouse=? k "button-down")(and
+                                                           (and (>= (+ (pos-x(button-pos p)) (/ (image-width (button-im p))  2)) x)
+                                                                (<= (- (pos-x(button-pos p)) (/ (image-width (button-im p))  2)) x))
+                                                           (and (>= (+ (pos-y(button-pos p)) (/ (image-height (button-im p))  2)) y)
+                                                                (<= (- (pos-y(button-pos p)) (/ (image-height (button-im p))  2)) y)))))
+
+
+;purpose:  update score
+;contract: updateScore ws(world state)->number
+;tests:
+(check-expect (updateScore (make-game "start" "selection" "shapes" "colors" "numbers" "end" "current scene" 0)) 10)
+;function
+(define (updateScore ws)(+ 10 (game-score ws)))
+
+;purpose:  clear score
+;contract: updateScore ws(world state)->number
+;tests:
+(check-expect (clearScore (make-game "start" "selection" "shapes" "colors" "numbers" "end" "current scene" 1110)) 0)
+;function:
+(define (clearScore ws)(* 0 (game-score ws)))
+
+(play-sound sound_path #true)
+
+
+;purpose: scene changer
+;contract: sceneSWITCH ws(world state) x(pos) y(pos) k(mouse event)-> world state
+;tests:
+
+;works in normal student packs but for some reason doesnt work here.
+;(check-expect (sceneSWITCH (make-game "start" "selection" "shapes" "colors" "numbers" "end" "Start Scene" "Score") (pos-x(button-pos START)) (pos-y(button-pos START)) "button-down")
+ ;             (make-game "start" "selection" "shapes" "colors" "numbers" "end" "Selection Scene" "Score"))
+
+;functions:
+(define (sceneSWITCH ws x y k)(cond
+                                  ((and(isItInYet? START x y k)(string=? (game-current ws) "Start Scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws) "Selection Scene" (game-score ws))) 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                  ((and(isItInYet? ShapesGame x y k)(string=? (game-current ws) "Selection Scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes T" (game-score ws)))
+
+                                  ((and(isItInYet? NEXT x y k)(string=? (game-current ws) "Shapes T"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 1" (game-score ws)))
+
+                                  ((and(isItInYet? shakl1 x y k)(string=? (game-current ws) "Shapes 1")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 2" (updateScore ws)))
+                                  ((and(isItInYet? shakl2 x y k)(string=? (game-current ws) "Shapes 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 2" (game-score ws)))
+                                  ((and(isItInYet? shakl3 x y k)(string=? (game-current ws) "Shapes 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 2" (game-score ws)))
+                                  ((and(isItInYet? shakl4 x y k)(string=? (game-current ws) "Shapes 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 2" (game-score ws)))
+                                  ((and(isItInYet? shakl5 x y k)(string=? (game-current ws) "Shapes 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 2" (game-score ws)))
+ 
+                                  ((and(isItInYet? shakl1 x y k)(string=? (game-current ws) "Shapes 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 3" (game-score ws)))
+                                  ((and(isItInYet? shakl2 x y k)(string=? (game-current ws) "Shapes 2")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 3" (updateScore ws)))
+                                  ((and(isItInYet? shakl3 x y k)(string=? (game-current ws) "Shapes 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 3" (game-score ws)))
+                                  ((and(isItInYet? shakl4 x y k)(string=? (game-current ws) "Shapes 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 3" (game-score ws)))
+                                  ((and(isItInYet? shakl5 x y k)(string=? (game-current ws) "Shapes 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 3" (game-score ws)))
+
+                                  ((and(isItInYet? shakl1 x y k)(string=? (game-current ws) "Shapes 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 4" (game-score ws)))
+                                  ((and(isItInYet? shakl2 x y k)(string=? (game-current ws) "Shapes 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 4" (game-score ws)))
+                                  ((and(isItInYet? shakl3 x y k)(string=? (game-current ws) "Shapes 3")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 4" (updateScore ws)))
+                                  ((and(isItInYet? shakl4 x y k)(string=? (game-current ws) "Shapes 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 4" (game-score ws)))
+                                  ((and(isItInYet? shakl5 x y k)(string=? (game-current ws) "Shapes 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 4" (game-score ws)))
+
+                                  ((and(isItInYet? shakl1 x y k)(string=? (game-current ws) "Shapes 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 5" (game-score ws)))
+                                  ((and(isItInYet? shakl2 x y k)(string=? (game-current ws) "Shapes 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 5" (game-score ws)))
+                                  ((and(isItInYet? shakl3 x y k)(string=? (game-current ws) "Shapes 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 5" (game-score ws)))
+                                  ((and(isItInYet? shakl4 x y k)(string=? (game-current ws) "Shapes 4")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 5" (updateScore ws)))
+                                  ((and(isItInYet? shakl5 x y k)(string=? (game-current ws) "Shapes 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Shapes 5" (game-score ws)))
+
+                                  ((and(isItInYet? shakl1 x y k)(string=? (game-current ws) "Shapes 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? shakl2 x y k)(string=? (game-current ws) "Shapes 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? shakl3 x y k)(string=? (game-current ws) "Shapes 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? shakl4 x y k)(string=? (game-current ws) "Shapes 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? shakl5 x y k)(string=? (game-current ws) "Shapes 5")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (updateScore ws)))
+                                  ((and(isItInYet? BACK x y k)(string=? (game-current ws) "score scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Selection Scene" (game-score ws)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                  ((and(isItInYet? ColorsGame x y k)(string=? (game-current ws) "Selection Scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors T" (game-score ws)))
+
+                                  ((and(isItInYet? NEXT x y k)(string=? (game-current ws) "Colors T"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 1" (game-score ws)))
+
+                                  ((and(isItInYet? loon1 x y k)(string=? (game-current ws) "Colors 1")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 2" (updateScore ws)))
+                                  ((and(isItInYet? loon2 x y k)(string=? (game-current ws) "Colors 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 2" (game-score ws)))
+                                  ((and(isItInYet? loon3 x y k)(string=? (game-current ws) "Colors 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 2" (game-score ws)))
+                                  ((and(isItInYet? loon4 x y k)(string=? (game-current ws) "Colors 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 2" (game-score ws)))
+                                  ((and(isItInYet? loon5 x y k)(string=? (game-current ws) "Colors 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 2" (game-score ws)))
+                                  ((and(isItInYet? loon6 x y k)(string=? (game-current ws) "Colors 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 2" (game-score ws)))
+
+                                  ((and(isItInYet? loon1 x y k)(string=? (game-current ws) "Colors 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 3" (game-score ws)))
+                                  ((and(isItInYet? loon2 x y k)(string=? (game-current ws) "Colors 2")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 3" (updateScore ws)))
+                                  ((and(isItInYet? loon3 x y k)(string=? (game-current ws) "Colors 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 3" (game-score ws)))
+                                  ((and(isItInYet? loon4 x y k)(string=? (game-current ws) "Colors 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 3" (game-score ws)))
+                                  ((and(isItInYet? loon5 x y k)(string=? (game-current ws) "Colors 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 3" (game-score ws)))
+                                  ((and(isItInYet? loon6 x y k)(string=? (game-current ws) "Colors 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 3" (game-score ws)))
+
+                                  ((and(isItInYet? loon1 x y k)(string=? (game-current ws) "Colors 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 4" (game-score ws)))
+                                  ((and(isItInYet? loon2 x y k)(string=? (game-current ws) "Colors 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 4" (game-score ws)))
+                                  ((and(isItInYet? loon3 x y k)(string=? (game-current ws) "Colors 3")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 4" (updateScore ws)))
+                                  ((and(isItInYet? loon4 x y k)(string=? (game-current ws) "Colors 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 4" (game-score ws)))
+                                  ((and(isItInYet? loon5 x y k)(string=? (game-current ws) "Colors 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 4" (game-score ws)))
+                                  ((and(isItInYet? loon6 x y k)(string=? (game-current ws) "Colors 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 4" (game-score ws)))
+                                  
+                                  ((and(isItInYet? loon1 x y k)(string=? (game-current ws) "Colors 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 5" (game-score ws)))
+                                  ((and(isItInYet? loon2 x y k)(string=? (game-current ws) "Colors 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 5" (game-score ws)))
+                                  ((and(isItInYet? loon3 x y k)(string=? (game-current ws) "Colors 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 5" (game-score ws)))
+                                  ((and(isItInYet? loon4 x y k)(string=? (game-current ws) "Colors 4")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 5" (updateScore ws)))
+                                  ((and(isItInYet? loon5 x y k)(string=? (game-current ws) "Colors 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 5" (game-score ws)))
+                                  ((and(isItInYet? loon6 x y k)(string=? (game-current ws) "Colors 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 5" (game-score ws)))
+                                  
+                                  ((and(isItInYet? loon1 x y k)(string=? (game-current ws) "Colors 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 6" (game-score ws)))
+                                  ((and(isItInYet? loon2 x y k)(string=? (game-current ws) "Colors 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 6" (game-score ws)))
+                                  ((and(isItInYet? loon3 x y k)(string=? (game-current ws) "Colors 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 6" (game-score ws)))
+                                  ((and(isItInYet? loon4 x y k)(string=? (game-current ws) "Colors 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 6" (game-score ws)))
+                                  ((and(isItInYet? loon5 x y k)(string=? (game-current ws) "Colors 5")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 6" (updateScore ws)))
+                                  ((and(isItInYet? loon6 x y k)(string=? (game-current ws) "Colors 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Colors 6" (game-score ws)))
+                                  
+                                  ((and(isItInYet? loon1 x y k)(string=? (game-current ws) "Colors 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? loon2 x y k)(string=? (game-current ws) "Colors 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? loon3 x y k)(string=? (game-current ws) "Colors 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? loon4 x y k)(string=? (game-current ws) "Colors 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? loon5 x y k)(string=? (game-current ws) "Colors 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? loon6 x y k)(string=? (game-current ws) "Colors 6")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (updateScore ws)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                 ((and(isItInYet? NumbersGame x y k)(string=? (game-current ws) "Selection Scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number T" (game-score ws)))
+
+                                 ((and(isItInYet? NEXT x y k)(string=? (game-current ws) "Number T"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 1" (game-score ws)))
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (updateScore ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 1")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 2" (game-score ws)))
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (updateScore ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 2")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 3" (game-score ws)))
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (updateScore ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 3")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 4" (game-score ws)))
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (updateScore ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 4")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 5" (game-score ws)))
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (updateScore ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 5")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 6" (game-score ws)))
+                                                                    
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (updateScore ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 6")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 7" (game-score ws)))                                                                    
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (updateScore ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 7")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 8" (game-score ws)))
+                                                                                                      
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (updateScore ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 8")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 9" (game-score ws)))
+                                                                                                      
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (updateScore ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 9")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Number 10" (game-score ws)))                                                                                                      
+
+                                  ((and(isItInYet? rakam1 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam2 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam3 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam4 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam5 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam6 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam7 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam8 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam9 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:/ #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (game-score ws)))
+                                  ((and(isItInYet? rakam10 x y k)(string=? (game-current ws) "Number 10")(play-sound sound_path:3 #true))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"score scene" (updateScore ws)))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                  
+                                  ((and(isItInYet? END x y k)(string=? (game-current ws) "Selection Scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"End Scene" (game-score ws)))
+                                  ((and(isItInYet? RESTART x y k)(string=? (game-current ws) "End Scene"))(make-game (game-Start ws)(game-Selection ws)(game-Shapes ws)(game-Colors ws)(game-Numbers ws)(game-End ws)"Start Scene" (clearScore ws)))
+                                   (else ws)))
+;purpose: draw game scenes
+;contract drawGame ws(World State)-> image
+;tests:
+(check-expect (drawGame (make-game "Start" "Selection" "Shapes" "Colors" "Numbers" "End" "Start Scene" "score"))(drawStart START))
+;function:
+(define (drawGame ws)(cond ((string=? (game-current ws) "Start Scene")(drawStart START))
+                           ((string=? (game-current ws)"Selection Scene")(drawSelection ShapesGame NumbersGame ColorsGame END ws))
+                           ((string=? (game-current ws)"End Scene")(drawEnd RESTART ws))
+                           ((string=? (game-current ws)"score scene")(drawScoreScene BACK ws))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+                           ((string=? (game-current ws)"Shapes T")(drawShapeT textsT Tshakl1 Tshakl2 Tshakl3 Tshakl4 Tshakl5 NEXT ws))
+                           ((string=? (game-current ws)"Shapes 1")(drawShape1 texts1 shakl1 shakl2 shakl3 shakl4 shakl5 ws))
+                           ((string=? (game-current ws)"Shapes 2")(drawShape2 texts2 shakl1 shakl2 shakl3 shakl4 shakl5 ws))
+                           ((string=? (game-current ws)"Shapes 3")(drawShape3 texts3 shakl1 shakl2 shakl3 shakl4 shakl5 ws))
+                           ((string=? (game-current ws)"Shapes 4")(drawShape4 texts4 shakl1 shakl2 shakl3 shakl4 shakl5 ws))
+                           ((string=? (game-current ws)"Shapes 5")(drawShape5 texts5 shakl1 shakl2 shakl3 shakl4 shakl5 ws))
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                           ((string=? (game-current ws)"Colors T")(drawColorsT textcT Tloon1 Tloon2 Tloon3 Tloon4 Tloon5 Tloon6 NEXT ws))
+                           ((string=? (game-current ws)"Colors 1")(drawColors1 textc1 loon1 loon2 loon3 loon4 loon5 loon6 ws))
+                           ((string=? (game-current ws)"Colors 2")(drawColors2 textc2 loon1 loon2 loon3 loon4 loon5 loon6 ws))
+                           ((string=? (game-current ws)"Colors 3")(drawColors3 textc3 loon1 loon2 loon3 loon4 loon5 loon6 ws))
+                           ((string=? (game-current ws)"Colors 4")(drawColors4 textc4 loon1 loon2 loon3 loon4 loon5 loon6 ws))
+                           ((string=? (game-current ws)"Colors 5")(drawColors5 textc5 loon1 loon2 loon3 loon4 loon5 loon6 ws))
+                           ((string=? (game-current ws)"Colors 6")(drawColors6 textc6 loon1 loon2 loon3 loon4 loon5 loon6 ws))
+ ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                           ((string=? (game-current ws)"Number T")(drawNumbT textnT Trakam1 Trakam2 Trakam3 Trakam4 Trakam5 Trakam6 Trakam7 Trakam8 Trakam9 Trakam10 NEXT ws))
+                           ((string=? (game-current ws)"Number 1")(drawNumb1 textn1 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 2")(drawNumb2 textn2 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 3")(drawNumb3 textn3 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 4")(drawNumb4 textn4 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 5")(drawNumb5 textn5 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 6")(drawNumb6 textn6 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 7")(drawNumb7 textn7 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 8")(drawNumb8 textn8 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 9")(drawNumb9 textn9 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ((string=? (game-current ws)"Number 10")(drawNumb10 textn10 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 ws))
+                           ))
+
+(define GAME (make-game (make-Start START)(make-Selection ShapesGame NumbersGame ColorsGame END)
+                                                                                     (make-Shapes shakl1 shakl1 shakl2 shakl3 shakl4 shakl5 NEXT)
+                                                                                     (make-Colors loon1 loon1 loon2 loon3 loon4 loon5 loon6 NEXT)
+                                                                                     (make-Numbers rakam1 rakam1 rakam2 rakam3 rakam4 rakam5 rakam6 rakam7 rakam8 rakam9 rakam10 NEXT)
+                                                                                     (make-End END)
+                                                                                     "Start Scene" 0))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+(big-bang GAME
+  (to-draw drawGame)
+  (on-mouse sceneSWITCH))
+(test)
